@@ -17,26 +17,26 @@ def input_students
 	puts "Please enter the names of the students"
 	puts "To finish, just hit return twice"
 
-	name = gets.chomp
+	name = STDIN.gets.chomp
 	
 	while !name.empty? do
 		puts "Please enter cohort month"
 
-		month = gets.chomp
+		month = STDIN.gets.chomp
 
 		while !month.empty? do
 			if @months[month]
-				@students << {name: name, cohort: @months[month]}
+				make_student(name, month)
 				puts "Now we have #{@students.count} students"
 			else
 				puts "That month doesn't exist, try again"
 			end
 			puts "Press return or change the month you just entered"
-			month = gets.chomp 
+			month = STDIN.gets.chomp 
 		end
 
 		puts "Enter another name or return to finish"
-		name = gets.chomp
+		name = STDIN.gets.chomp
 	end
 end
 
@@ -68,7 +68,7 @@ end
 
 def print_cohort
 	puts "Please enter the cohort you'd like to see"
-	cohort = gets.chomp
+	cohort = STDIN.gets.chomp
 	st_hort = []
 	@students.map {
 		|student|
@@ -95,7 +95,9 @@ def show_students
 end
 
 def save_students
-	file = File.open("students.csv", "w")
+	puts "please enter the name of the file you want to save"
+	filename = gets.chomp
+	file = File.open(filename, "w")
 	@students.each do |student|
 		student_data = [student[:name], student[:cohort]]
 		csv_line = student_data.join(",")
@@ -104,25 +106,46 @@ def save_students
 	file.close
 end
 
-def load_students
-	file = File.open("students.csv", "r")
+def load_students(filename = gets.chomp)
+	file = File.open(filename, "r")
 	file.readlines.each do |line|
-		name, cohort = line.chomp.split(',')
-		@students << {name: name, cohort: cohort.to_sym}
+		name, month = line.chomp.split(',')
+		make_student(name, month)
 	end
 	file.close
 end
+
+def make_student(name, month)
+	@students << {name: name, cohort: @months[month]}
+end
+
+def try_load_students
+	filename = "students.csv"
+	if File.exists?(filename)
+		load_students(filename)
+		puts "Loaded #{@students.count} from #{filename}"
+	else
+		puts "Sorry, #{filename} doesn't exist."
+		exit
+	end
+end
+
 def process(selection)
 	case selection
 		when "1"
+			puts "You have chosen to add students"
 			students = input_students
 		when "2"
+			puts "You have chosen to show students"
 			show_students
 		when "3"
+			puts "You have chosen to save students to a file"
 			save_students
 		when "4"
+			puts "You have chosen to load students from a file"
 			load_students
 		when "9"
+			puts "You have chosen to exit the programme, goodbye"
 			exit
 		else 
 			puts "That is not an option try again"
@@ -132,8 +155,9 @@ end
 def interactive_menu
 	loop do
 		print_menu
-		process(gets.chomp)
+		process(STDIN.gets.chomp)
 	end
 end
 
+try_load_students
 interactive_menu
